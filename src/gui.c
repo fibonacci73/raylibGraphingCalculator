@@ -344,6 +344,12 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
     if(IsKeyPressed(KEY_ENTER))
         isOptionSelected = true;
+    if(IsKeyPressed(KEY_ESCAPE))
+    {
+        *nextScene = GRAPHICS;
+        return;
+    }
+
 
     if(isOptionSelected)
     {
@@ -358,6 +364,9 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             static int hovered = 0; 
             static int funcs[2] = {-1, -1};
             static int stage = 0;
+
+            static Vector2 intersections[MAX_INTERSECTIONS];
+            static int intsectsNum = 0;
 
 
             //Ignores first frame input
@@ -397,6 +406,26 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 justEntered = true;
             }
 
+            if(stage == 2)
+            {   
+                intsectsNum = findIntersections(
+                    (*expressions)[funcs[0]], 
+                    (*expressions)[funcs[1]], 
+                    intersections
+                );
+                
+                for(int i = 0; i < intsectsNum; i++)
+                {
+                    char label[64];
+                    snprintf(label, sizeof(label), "int %d = (%.2f, %.2f)", 
+                            i + 1, intersections[i].x, intersections[i].y);
+                    
+                    DrawText(label, 20, 10 + 30 * i, 20, BLACK);
+                }
+                
+                break;
+            }
+
             for (int i = 0; i < *count; i++)
             {
                 Color color = palette[i % paletteSize];
@@ -419,8 +448,9 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 DrawText(label, 20, 10 + 30 * i, 20, color);
                 DrawText((*expressions)[i], 80, 10 + 30 * i, 20, color);
             }
+
+
             break;
-        
         default:
             break;
         }
