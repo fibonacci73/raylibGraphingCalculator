@@ -314,22 +314,22 @@ void vWindowScene(Scene *nextScene)
     }
 
     // DRAW
-    DrawText("Modifica finestra grafico", 50, 20, 24, BLACK);
+    DrawText("Modifica finestra grafico", 10, 10, 24, BLACK);
 
     for (int i = 0; i < 4; i++)
     {
         bool isSelected = (i == selected);
         Color color = isSelected ? LIGHTGRAY : DARKGRAY;
 
-        DrawText(labels[i], 50, 80 + 40 * i, 20, color);
+        DrawText(labels[i], 10, 40 + 30 * i, 20, color);
 
         char valText[32];
         if (isSelected && editing)
-            DrawText(buffer, 200, 80 + 40 * i, 20, BLACK);
+            DrawText(buffer, 80, 40 + 30 * i, 20, BLACK);
         else
         {
             snprintf(valText, sizeof(valText), "%.2f", *vars[i]);
-            DrawText(valText, 200, 80 + 40 * i, 20, BLACK);
+            DrawText(valText, 80, 40 + 30 * i, 20, BLACK);
         }
     }
 }
