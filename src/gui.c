@@ -355,7 +355,17 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             const int paletteSize = sizeof(palette) / sizeof(palette[0]);
 
             static int selected = 0; 
-            
+
+            if(IsKeyPressed(KEY_DOWN))
+            {
+                selected++;
+            }
+
+            if(IsKeyPressed(KEY_UP))
+            {
+                selected--;
+            }
+
             for (int i = 0; i < *count; i++)
             {
                 Color color = palette[i % paletteSize];
