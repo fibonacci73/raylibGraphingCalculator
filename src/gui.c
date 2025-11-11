@@ -347,6 +347,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
     if(isOptionSelected)
     {
+        static bool justEntered = true;
         switch (selectedOption)
         {
         case 0: //IntSect code
@@ -354,27 +355,61 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             Color palette[] = {RED, GREEN, BLUE, ORANGE, PURPLE};
             const int paletteSize = sizeof(palette) / sizeof(palette[0]);
 
-            static int selected = 0; 
+            static int hovered = 0; 
+            static int funcs[2] = {-1, -1};
+            static int stage = 0;
+
+
+            //Ignores first frame input
+            if(justEntered) 
+            {
+                //resets the static variables if is the first frame
+                hovered = 0;
+                funcs[0] = -1;
+                funcs[1] = -1;
+                stage = 0;
+
+                justEntered = false;
+                break; //exits right away
+            }
 
             if(IsKeyPressed(KEY_DOWN))
             {
-                selected++;
+                hovered++;
             }
 
             if(IsKeyPressed(KEY_UP))
             {
-                selected--;
+                hovered--;
+            }
+
+            if(IsKeyPressed(KEY_ENTER) && stage < 2)
+            {
+                if(funcs[0] == hovered) break; //doesn't allow to have the same function 2 times;
+                funcs[stage] = hovered;
+                stage++;
+            }
+
+            //to come back to gSolve menu
+            if(IsKeyPressed(KEY_ESCAPE))
+            {
+                isOptionSelected = false;
+                justEntered = true;
             }
 
             for (int i = 0; i < *count; i++)
             {
                 Color color = palette[i % paletteSize];
-                bool isSelected = (i == selected);
 
-                // Evidenzia la riga selezionata
-                if (isSelected)
+                //Highlights the hovered
+                if (hovered == i)
                 {
                     DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(LIGHTGRAY, 0.4f));
+                }
+
+                if(funcs[0] == i || funcs[1] == i)
+                {
+                    DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(SKYBLUE, 0.4f));
                 }
 
                 char label[16];
