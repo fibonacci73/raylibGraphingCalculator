@@ -344,7 +344,8 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
     if(IsKeyPressed(KEY_ENTER))
         isOptionSelected = true;
-    if(IsKeyPressed(KEY_ESCAPE))
+    
+    if(IsKeyPressed(KEY_ESCAPE) && !isOptionSelected) //differentiated from the esc in switch: case 0
     {
         *nextScene = GRAPHICS;
         return;
@@ -394,16 +395,18 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
             if(IsKeyPressed(KEY_ENTER) && stage < 2)
             {
-                if(funcs[0] == hovered) break; //doesn't allow to have the same function 2 times;
+                //doesn't allow to pick a empty function, doesn't allow to pick the same expression twice
+                if(funcs[0] == hovered || (*expressions)[hovered][0] == '\0') break;
                 funcs[stage] = hovered;
                 stage++;
             }
 
-            //to come back to gSolve menu
+            //comes back to gSolve menu
             if(IsKeyPressed(KEY_ESCAPE))
             {
                 isOptionSelected = false;
                 justEntered = true;
+                break;
             }
 
             if(stage == 2)
@@ -444,7 +447,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 char label[16];
                 snprintf(label, sizeof(label), "Y%d =", i + 1);
 
-                // Selezionata → testo più grande o più acceso
+                //highlights
                 DrawText(label, 20, 10 + 30 * i, 20, color);
                 DrawText((*expressions)[i], 80, 10 + 30 * i, 20, color);
             }
