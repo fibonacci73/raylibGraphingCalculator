@@ -417,27 +417,12 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             }
 
             if(stage == 2)
-<<<<<<< HEAD
             {   
                 if (calcJustEntered)
                 {
                     intsectsNum = findIntSects((*expressions)[funcs[0]], (*expressions)[funcs[1]], intersections);
                     calcJustEntered = false;
                 }
-=======
-            {
-                if(firstCalcIntSects)
-                {
-                    intsectsNum = findIntersections(
-                    (*expressions)[funcs[0]], 
-                    (*expressions)[funcs[1]], 
-                    intersections
-                    );
-
-                    firstCalcIntSects = false;
-                }
-
->>>>>>> 7d1d86ab53232ed60290034406a8741afcc72f8b
                 
                 for(int i = 0; i < intsectsNum; i++)
                 {
