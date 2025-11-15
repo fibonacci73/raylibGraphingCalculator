@@ -441,3 +441,22 @@ int findIntSects(char* func1, char* func2, Vector2* intersections)
     }
     return count;
 }
+
+int findFunctionRoots(char* func, Vector2 roots[])
+{
+    float funcY;
+    int count = 0;
+
+    for(float funcX = xMin + step; funcX <= xMax && count < MAX_INTERSECTIONS; funcX += step)
+    {
+        funcY = evaluateRPN(func, funcX);
+
+        if(funcY <= step/2 && funcY >= -step/2)
+        {
+            roots[count] = (Vector2){funcX, funcY};
+            count++;
+        }
+    }
+
+    return count;
+}

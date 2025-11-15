@@ -355,16 +355,18 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
     if(isOptionSelected)
     {
         static bool justEntered = true;
+
+        Color palette[] = {RED, GREEN, BLUE, ORANGE, PURPLE};
+        const int paletteSize = sizeof(palette) / sizeof(palette[0]);
+
+        static int hovered = 0; 
+
         switch (selectedOption)
         {
         case 0: //IntSect code
             
-            Color palette[] = {RED, GREEN, BLUE, ORANGE, PURPLE};
-            const int paletteSize = sizeof(palette) / sizeof(palette[0]);
-
-            static int hovered = 0; 
-            static int funcs[2] = {-1, -1};
-            static int stage = 0;
+            static int intSectFuncs[2] = {-1, -1};
+            static int intSectStage = 0;
 
             static Vector2 intersections[MAX_INTERSECTIONS];
             static int intsectsNum = 0;
@@ -377,9 +379,9 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             {
                 //resets the static variables if is the first frame
                 hovered = 0;
-                funcs[0] = -1;
-                funcs[1] = -1;
-                stage = 0;
+                intSectFuncs[0] = -1;
+                intSectFuncs[1] = -1;
+                intSectStage = 0;
 
                 justEntered = false;
                 break; //exits right away
@@ -395,12 +397,12 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 hovered--;
             }
 
-            if(IsKeyPressed(KEY_ENTER) && stage < 2)
+            if(IsKeyPressed(KEY_ENTER) && intSectStage < 2)
             {
                 //doesn't allow to pick a empty function, doesn't allow to pick the same expression twice
-                if(funcs[0] == hovered || (*expressions)[hovered][0] == '\0') break;
-                funcs[stage] = hovered;
-                stage++;
+                if(intSectFuncs[0] == hovered || (*expressions)[hovered][0] == '\0') break;
+                intSectFuncs[intSectStage] = hovered;
+                intSectStage++;
             }
 
             //comes back to gSolve menu
@@ -412,14 +414,14 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 break;
             }
 
-            if(stage == 2)
+            if(intSectStage == 2)
             {   
                 if(calcJustEntered)
                 {
                     char func1RPN[MAX_TOKENS];
                     char func2RPN[MAX_TOKENS];
-                    shuntingYard((*expressions)[funcs[0]], func1RPN);
-                    shuntingYard((*expressions)[funcs[1]], func2RPN);
+                    shuntingYard((*expressions)[intSectFuncs[0]], func1RPN);
+                    shuntingYard((*expressions)[intSectFuncs[1]], func2RPN);
 
                     intsectsNum = findIntSects(func1RPN, func2RPN, intersections);
                     calcJustEntered = false;
@@ -447,7 +449,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                     DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(LIGHTGRAY, 0.4f));
                 }
 
-                if(funcs[0] == i || funcs[1] == i)
+                if(intSectFuncs[0] == i || intSectFuncs[1] == i)
                 {
                     DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(SKYBLUE, 0.4f));
                 }
@@ -462,6 +464,90 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
 
             break;
+
+        case 1:
+            static bool justEntered = true, computeRoots = true, funcRootSelected = false;
+            static int rootFunc, rootCount;
+            static Vector2 roots[MAX_INTERSECTIONS];
+
+            //Ignores first frame input
+            if(justEntered) 
+            {
+                //resets the static variables if is the first frame
+                hovered = 0;
+                rootCount = -1;
+                intSectStage = 0;
+
+                justEntered = false;
+                break; //exits right away
+            }
+
+            if(IsKeyPressed(KEY_ENTER) || funcRootSelected)
+            {
+                if(computeRoots)
+                {
+                    char funcRootRPN[MAX_TOKENS];
+                    shuntingYard((*expressions)[hovered], funcRootRPN);
+
+                    rootCount = findFunctionRoots(funcRootRPN, roots);
+                }
+
+                for(int i = 0; i < rootCount; i++)
+                {
+                    char label[64];
+                    snprintf(label, sizeof(label), "roots: (%.2f, %.2f)", 
+                            i + 1, roots[i].x, roots[i].y);
+                    
+                    DrawText(label, 20, 10 + 30 * i, 20, BLACK);
+                }
+
+                funcRootSelected = true;
+                break;
+            }
+
+            if(IsKeyPressed(KEY_DOWN))
+            {
+                hovered++;
+            }
+
+            if(IsKeyPressed(KEY_UP))
+            {
+                hovered--;
+            }
+
+            if(IsKeyPressed(KEY_ESCAPE))
+            {
+                isOptionSelected = false;
+                justEntered = true;
+                computeRoots = true;
+                funcRootSelected = false;
+                break;
+            }
+
+            for (int i = 0; i < *count; i++)
+            {
+                Color color = palette[i % paletteSize];
+
+                //Highlights the hovered
+                if (hovered == i)
+                {
+                    DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(LIGHTGRAY, 0.4f));
+                }
+
+                if(intSectFuncs[0] == i || intSectFuncs[1] == i)
+                {
+                    DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(SKYBLUE, 0.4f));
+                }
+
+                char label[16];
+                snprintf(label, sizeof(label), "Y%d =", i + 1);
+
+                //highlights
+                DrawText(label, 20, 10 + 30 * i, 20, color);
+                DrawText((*expressions)[i], 80, 10 + 30 * i, 20, color);
+            }
+            break;
+
         default:
             break;
         }

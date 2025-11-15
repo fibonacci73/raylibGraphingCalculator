@@ -33,4 +33,5 @@ int precedence(char op);
 int isOperator(char c);
 
 int findIntSects(char* func1, char* func2, Vector2* intersections);
+int findFunctionRoots(char* func, Vector2 roots[]);
 #endif
