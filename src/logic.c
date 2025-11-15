@@ -1,11 +1,7 @@
 #include "logic.h"
 
 float xMin = -6.0f, xMax = 6.0f, yMin = -6.0f, yMax = 6.0f, step = 0.001f;
-float xMin = -6.0f, xMax = 6.0f, yMin = -6.0f, yMax = 6.0f, step = 0.001f;
-<<<<<<< HEAD
-=======
 
->>>>>>> 7d1d86ab53232ed60290034406a8741afcc72f8b
 int readExpression(char *expression)
 {
     int nextChar = GetCharPressed();
@@ -406,10 +402,7 @@ double evaluateRPN(const char *rpn, double xValue)
     return (top >= 0) ? stack[top] : 0;
 }
 
-int findIntSects(char* func1, char* func2, Vector2* intersections)
-{
-    float prevDiff, currDiff;
-    float func1Y, func2Y;
+
 int findIntSects(char* func1, char* func2, Vector2* intersections)
 {
     float prevDiff, currDiff;
@@ -438,33 +431,8 @@ int findIntSects(char* func1, char* func2, Vector2* intersections)
             
             intersections[count] = (Vector2){xIntersect, yIntersect};
             count++;
-    // Get initial difference
-    float x = xMin;
-    func1Y = evaluateRPN(func1, x);
-    func2Y = evaluateRPN(func2, x);
-    prevDiff = func1Y - func2Y;
-    
-    // Scan for sign changes
-    for(x = xMin + step; x <= xMax && count < MAX_INTERSECTIONS; x += step)
-    {
-        func1Y = evaluateRPN(func1, x);
-        func2Y = evaluateRPN(func2, x);
-        currDiff = func1Y - func2Y;
-        
-        // Sign change detected - functions crossed
-        if(prevDiff * currDiff < 0)
-        {
-            // Use midpoint between samples as approximation
-            float xIntersect = x - step/2;
-            float yIntersect = evaluateRPN(func1, xIntersect);
-            
-            intersections[count] = (Vector2){xIntersect, yIntersect};
-            count++;
-        }
-        
-        prevDiff = currDiff;
-        prevDiff = currDiff;
-    }
 
-    return intSectIndex;
+        }
+    }
+    return count;
 }

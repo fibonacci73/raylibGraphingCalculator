@@ -371,8 +371,6 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
             static bool calcJustEntered = true;
 
-            static bool calcJustEntered = true;
-
 
             //Ignores first frame input
             if(justEntered) 
@@ -410,7 +408,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             {
                 isOptionSelected = false;
                 justEntered = true;
-                firstCalcIntSects = true;
+                calcJustEntered = true;
                 break;
             }
 
