@@ -369,7 +369,11 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             static Vector2 intersections[MAX_INTERSECTIONS];
             static int intsectsNum = 0;
 
+<<<<<<< HEAD
             static bool calcJustEntered = true;
+=======
+            static bool firstCalcIntSects = true;
+>>>>>>> 7d1d86ab53232ed60290034406a8741afcc72f8b
 
 
             //Ignores first frame input
@@ -408,16 +412,32 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             {
                 isOptionSelected = false;
                 justEntered = true;
+                firstCalcIntSects = true;
                 break;
             }
 
             if(stage == 2)
+<<<<<<< HEAD
             {   
                 if (calcJustEntered)
                 {
                     intsectsNum = findIntSects((*expressions)[funcs[0]], (*expressions)[funcs[1]], intersections);
                     calcJustEntered = false;
                 }
+=======
+            {
+                if(firstCalcIntSects)
+                {
+                    intsectsNum = findIntersections(
+                    (*expressions)[funcs[0]], 
+                    (*expressions)[funcs[1]], 
+                    intersections
+                    );
+
+                    firstCalcIntSects = false;
+                }
+
+>>>>>>> 7d1d86ab53232ed60290034406a8741afcc72f8b
                 
                 for(int i = 0; i < intsectsNum; i++)
                 {

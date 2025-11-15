@@ -1,6 +1,10 @@
 #include "logic.h"
 
 float xMin = -6.0f, xMax = 6.0f, yMin = -6.0f, yMax = 6.0f, step = 0.001f;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7d1d86ab53232ed60290034406a8741afcc72f8b
 int readExpression(char *expression)
 {
     int nextChar = GetCharPressed();
@@ -401,6 +405,7 @@ double evaluateRPN(const char *rpn, double xValue)
     return (top >= 0) ? stack[top] : 0;
 }
 
+<<<<<<< HEAD
 int findIntSects(char* func1, char* func2, Vector2* intersections)
 {
     float prevDiff, currDiff;
@@ -432,7 +437,42 @@ int findIntSects(char* func1, char* func2, Vector2* intersections)
         }
         
         prevDiff = currDiff;
+=======
+int findIntersections(const char* expr1, const char* expr2, Vector2* intersections)
+{
+    float prevX = xMin;
+    float y1_prev = evaluateRPN(expr1, prevX);
+    float y2_prev = evaluateRPN(expr2, prevX);
+    float delta_prev = y1_prev - y2_prev;
+
+    int intSectIndex = 0;
+
+    for (float x = xMin + step; x <= xMax; x += step)
+    {
+        float y1 = evaluateRPN(expr1, x);
+        float y2 = evaluateRPN(expr2, x);
+        float delta = y1 - y2;
+
+        // rilevazione cambio di segno
+        if ((delta_prev > 0 && delta < 0) ||
+            (delta_prev < 0 && delta > 0))
+        {
+            if (intSectIndex < MAX_INTERSECTIONS)
+            {
+                // INTERPOLAZIONE LINEARE
+                float t = fabsf(delta_prev) / (fabsf(delta_prev) + fabsf(delta));
+                float x_int = prevX + t * (x - prevX);
+                float y_int = evaluateRPN(expr1, x_int);
+
+                intersections[intSectIndex++] = (Vector2){x_int, y_int};
+            }
+        }
+
+        // sposta in avanti
+        prevX = x;
+        delta_prev = delta;
+>>>>>>> 7d1d86ab53232ed60290034406a8741afcc72f8b
     }
-    
-    return count;
+
+    return intSectIndex;
 }
