@@ -425,13 +425,18 @@ int findIntSects(char* func1, char* func2, Vector2* intersections)
         // Sign change detected - functions crossed
         if(prevDiff * currDiff < 0)
         {
-            // Use midpoint between samples as approximation
-            float xIntersect = x - step/2;
+            // Linear interpolation to find intersection point
+            float xPrev = x - step;
+            float t = fabsf(prevDiff) / (fabsf(prevDiff) + fabsf(currDiff));
+            float xIntersect = xPrev + t * step;
+            
+            // Calculate Y at intersection point
             float yIntersect = evaluateRPN(func1, xIntersect);
             
             intersections[count] = (Vector2){xIntersect, yIntersect};
             count++;
 
+            prevDiff = currDiff;
         }
     }
     return count;

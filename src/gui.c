@@ -414,9 +414,14 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
             if(stage == 2)
             {   
-                if (calcJustEntered)
+                if(calcJustEntered)
                 {
-                    intsectsNum = findIntSects((*expressions)[funcs[0]], (*expressions)[funcs[1]], intersections);
+                    char func1RPN[MAX_TOKENS];
+                    char func2RPN[MAX_TOKENS];
+                    shuntingYard((*expressions)[funcs[0]], func1RPN);
+                    shuntingYard((*expressions)[funcs[1]], func2RPN);
+
+                    intsectsNum = findIntSects(func1RPN, func2RPN, intersections);
                     calcJustEntered = false;
                 }
                 
