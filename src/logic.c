@@ -1,7 +1,6 @@
 #include "logic.h"
 
-float xMin = -6.0f, xMax = 6.0f, yMin = -6.0f, yMax = 6.0f;
-
+float xMin = -6.0f, xMax = 6.0f, yMin = -6.0f, yMax = 6.0f, step = 0.001f;
 int readExpression(char *expression)
 {
     int nextChar = GetCharPressed();
@@ -402,90 +401,37 @@ double evaluateRPN(const char *rpn, double xValue)
     return (top >= 0) ? stack[top] : 0;
 }
 
-static double refineIntersectionLight(const char* expr1, const char* expr2, 
-                                       double x_left, double x_right)
+int findIntSects(char* func1, char* func2, Vector2* intersections)
 {
-    // Solo poche iterazioni per risparmiare CPU
-    for (int i = 0; i < REFINE_STEPS; i++)
-    {
-        double x_mid = (x_left + x_right) * 0.5;  // Evita divisione
-        
-        double diff_mid = evaluateRPN(expr1, x_mid) - evaluateRPN(expr2, x_mid);
-        double diff_left = evaluateRPN(expr1, x_left) - evaluateRPN(expr2, x_left);
-        
-        // Controllo base: evita NaN/Inf
-        if (isnan(diff_mid) || isinf(diff_mid))
-            return x_mid;
-        
-        if (diff_left * diff_mid < 0)
-            x_right = x_mid;
-        else
-            x_left = x_mid;
-    }
-    
-    return (x_left + x_right) * 0.5;
-}
-
-int findIntersections(const char* expr1, const char* expr2, Vector2* intersections)
-{
-    if (!expr1 || !expr2 || !intersections)
-        return 0;
-    
+    float prevDiff, currDiff;
+    float func1Y, func2Y;
     int count = 0;
     
-    // Step size più grande per ridurre iterazioni
-    double step = (xMax - xMin) / (GetScreenWidth() * 0.5);  // Metà dei punti
+    // Get initial difference
+    float x = xMin;
+    func1Y = evaluateRPN(func1, x);
+    func2Y = evaluateRPN(func2, x);
+    prevDiff = func1Y - func2Y;
     
-    double prev_diff = 0;
-    double prev_x = xMin;
-    bool first = true;
-    
-    for (double x = xMin; x <= xMax && count < MAX_INTERSECTIONS; x += step) 
+    // Scan for sign changes
+    for(x = xMin + step; x <= xMax && count < MAX_INTERSECTIONS; x += step)
     {
-        double y1 = evaluateRPN(expr1, x);
-        double y2 = evaluateRPN(expr2, x);
+        func1Y = evaluateRPN(func1, x);
+        func2Y = evaluateRPN(func2, x);
+        currDiff = func1Y - func2Y;
         
-        // Skip valori invalidi (veloce)
-        if (isnan(y1) || isinf(y1) || isnan(y2) || isinf(y2))
+        // Sign change detected - functions crossed
+        if(prevDiff * currDiff < 0)
         {
-            first = true;
-            prev_x = x;
-            continue;
+            // Use midpoint between samples as approximation
+            float xIntersect = x - step/2;
+            float yIntersect = evaluateRPN(func1, xIntersect);
+            
+            intersections[count] = (Vector2){xIntersect, yIntersect};
+            count++;
         }
         
-        double diff = y1 - y2;
-        
-        if (!first)
-        {
-            // Solo controllo cambio di segno (semplice e veloce)
-            if (prev_diff * diff < 0)
-            {
-                // Raffinamento leggero (solo 3 iterazioni)
-                double refined_x = refineIntersectionLight(expr1, expr2, prev_x, x);
-                
-                // Check duplicati semplificato
-                bool is_duplicate = false;
-                for (int i = 0; i < count; i++)
-                {
-                    if (fabs(intersections[i].x - refined_x) < step * 2)
-                    {
-                        is_duplicate = true;
-                        break;
-                    }
-                }
-                
-                if (!is_duplicate)
-                {
-                    intersections[count].x = refined_x;
-                    intersections[count].y = evaluateRPN(expr1, refined_x);
-                    count++;
-                }
-            }
-        }
-        
-        prev_diff = diff;
-        prev_x = x;
-        first = false;
+        prevDiff = currDiff;
     }
     
     return count;

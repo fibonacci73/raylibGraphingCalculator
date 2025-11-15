@@ -23,7 +23,7 @@
 #define REFINE_STEPS 3 
 
 //global variables, first defined in logic.c, they represents the minimum and maximum coordinates represented in math terms
-extern float xMin, xMax, yMin, yMax;
+extern float xMin, xMax, yMin, yMax, step;
 
 int readExpression(char *expression);
 
@@ -32,5 +32,5 @@ void shuntingYard(const char *input, char *output);
 int precedence(char op);
 int isOperator(char c);
 
-int findIntersections(const char* expr1, const char* expr2, Vector2* intersections);
+int findIntSects(char* func1, char* func2, Vector2* intersections);
 #endif
