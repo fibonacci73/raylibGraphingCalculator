@@ -369,11 +369,9 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             static Vector2 intersections[MAX_INTERSECTIONS];
             static int intsectsNum = 0;
 
-<<<<<<< HEAD
             static bool calcJustEntered = true;
-=======
-            static bool firstCalcIntSects = true;
->>>>>>> 7d1d86ab53232ed60290034406a8741afcc72f8b
+
+            static bool calcJustEntered = true;
 
 
             //Ignores first frame input
