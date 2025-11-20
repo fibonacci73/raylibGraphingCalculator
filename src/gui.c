@@ -61,7 +61,7 @@ void drawFunction(const char *rpn, Color color)
     int width = GetScreenWidth();
     int height = GetScreenHeight();
 
-    int steps = (int)((xMax - xMin) / STEP);
+    int steps = (int)((xMax - xMin) / step);
 
     double scaleX = width / (xMax - xMin);
     double scaleY = height / (yMax - yMin);
@@ -71,7 +71,7 @@ void drawFunction(const char *rpn, Color color)
 
     for (int i = 0; i <= steps; i++)
     {
-        double x = xMin + i * STEP;
+        double x = xMin + i * step;
         double y = evaluateRPN(rpn, x);
 
         int screenX = (int)(x0 + x * scaleX);
@@ -397,14 +397,6 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 hovered--;
             }
 
-            if(IsKeyPressed(KEY_ENTER) && intSectStage < 2)
-            {
-                //doesn't allow to pick a empty function, doesn't allow to pick the same expression twice
-                if(intSectFuncs[0] == hovered || (*expressions)[hovered][0] == '\0') break;
-                intSectFuncs[intSectStage] = hovered;
-                intSectStage++;
-            }
-
             //comes back to gSolve menu
             if(IsKeyPressed(KEY_ESCAPE))
             {
@@ -412,6 +404,14 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 justEntered = true;
                 calcJustEntered = true;
                 break;
+            }
+
+            if(IsKeyPressed(KEY_ENTER) && intSectStage < 2)
+            {
+                //doesn't allow to pick a empty function, doesn't allow to pick the same expression twice
+                if(intSectFuncs[0] == hovered || (*expressions)[hovered][0] == '\0') break;
+                intSectFuncs[intSectStage] = hovered;
+                intSectStage++;
             }
 
             if(intSectStage == 2)
@@ -467,7 +467,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
         case 1:
             static bool justEntered = true, computeRoots = true, funcRootSelected = false;
-            static int rootFunc, rootCount;
+            static int rootCount;
             static Vector2 roots[MAX_INTERSECTIONS];
 
             //Ignores first frame input
@@ -480,6 +480,15 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
                 justEntered = false;
                 break; //exits right away
+            }
+
+            if(IsKeyPressed(KEY_ESCAPE))
+            {
+                isOptionSelected = false;
+                justEntered = true;
+                computeRoots = true;
+                funcRootSelected = false;
+                break;
             }
 
             if(IsKeyPressed(KEY_ENTER) || funcRootSelected)
@@ -496,7 +505,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 {
                     char label[64];
                     snprintf(label, sizeof(label), "roots: (%.2f, %.2f)", 
-                            i + 1, roots[i].x, roots[i].y);
+                            roots[i].x, roots[i].y);
                     
                     DrawText(label, 20, 10 + 30 * i, 20, BLACK);
                 }
@@ -515,15 +524,6 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 hovered--;
             }
 
-            if(IsKeyPressed(KEY_ESCAPE))
-            {
-                isOptionSelected = false;
-                justEntered = true;
-                computeRoots = true;
-                funcRootSelected = false;
-                break;
-            }
-
             for (int i = 0; i < *count; i++)
             {
                 Color color = palette[i % paletteSize];
@@ -534,11 +534,6 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                     DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(LIGHTGRAY, 0.4f));
                 }
 
-                if(intSectFuncs[0] == i || intSectFuncs[1] == i)
-                {
-                    DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(SKYBLUE, 0.4f));
-                }
-
                 char label[16];
                 snprintf(label, sizeof(label), "Y%d =", i + 1);
 
@@ -547,6 +542,10 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 DrawText((*expressions)[i], 80, 10 + 30 * i, 20, color);
             }
             break;
+
+        case 2:
+            break;
+            
 
         default:
             break;
