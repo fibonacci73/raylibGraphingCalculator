@@ -1,0 +1,33 @@
+{
+	"files.exclude": {
+		"**/.git": true,
+		"**/.svn": true,
+		"**/.hg": true,
+		"**/CVS": true,
+		"**/.DS_Store": true,
+		"**/*.o": true,
+		"**/*.exe": true,
+	},
+	"files.associations": {
+		"raylib.h": "c",
+		"example.h": "c",
+		"game.h": "c",
+		"segment.h": "c",
+		"array": "c",
+		"string_view": "c",
+		"format": "c",
+		"initializer_list": "c",
+		"span": "c",
+		"cstdlib": "c",
+		"apple.h": "c",
+		"stdbool.h": "c",
+		"stdio.h": "c",
+		"menu.h": "c",
+		"stdlib.h": "c",
+		"gui.h": "c",
+		"string.h": "c",
+		"*.m": "c",
+		"logic.h": "c",
+		"algorithm": "c"
+	}
+}
