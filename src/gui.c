@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-const char *scenesName[menuScenesNum] = {"1. Graphic", "2.Exit"};
+const char *scenesName[menuScenesNum] = {"1. Graphic", "2. Exit"};
 const char *gSolveOptionsName[gSolveOptions] = {"1. Intesect"};
 
 //implements the general menuSample() function for the main menu
@@ -336,7 +336,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
     static bool isOptionSelected = false;
 
     if(!isOptionSelected) //if options is still not selected
-        menuSample(gSolveOptionsName, menuScenesNum, &selectedOption);
+        menuSample(gSolveOptionsName, gSolveOptions, &selectedOption);
 
     if(IsKeyPressed(KEY_ENTER))
         isOptionSelected = true;
