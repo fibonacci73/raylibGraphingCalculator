@@ -4,19 +4,19 @@
 #include <string.h>
 #include <stdio.h>
 
-const char *scenesName[scenesNum] = {"1. Menu", "2. Graphic", "3. Settings"};
-const char *gSolveOptionsName[scenesNum] = {"1. Intesect", "2. Root", "3. Ysept"};
+const char *scenesName[menuScenesNum] = {"1. Graphic", "2. Exit"};
+const char *gSolveOptionsName[gSolveOptions] = {"1. Intesect"};
 
 //implements the general menuSample() function for the main menu
 void menu(Scene *nextScene)
 {
     static int selectedOption = 0;  // persistent across frames
 
-    menuSample(scenesName, scenesNum, &selectedOption);
+    menuSample(scenesName, menuScenesNum, &selectedOption);
 
     if (IsKeyPressed(KEY_ENTER))
     {
-        *nextScene = (Scene)selectedOption;
+        *nextScene = (Scene)selectedOption + 1;
     }
 }
 
@@ -142,17 +142,17 @@ void drawAxes()
     DrawText("Y", x0 + 5, 5, 10, GRAY);
 }
 
+// the scene to read the keyboard input of the functions
 void inputScene(Scene *nextScene, char ***expressions, int *count)
 {
-    static int selected = 0;                    // indice riga selezionata
-    static bool editing = false;                // se stai modificando una riga
-    static char buffer[EXPRESSION_BUFFER] = ""; // buffer temporaneo
+    static int selected = 0;                    // selected line index
+    static bool editing = false;                // edit mode flag
+    static char buffer[EXPRESSION_BUFFER] = ""; // temporary buffer
 
-    // Tavolozza condivisa con graphicScene()
     Color palette[] = {RED, GREEN, BLUE, ORANGE, PURPLE};
     const int paletteSize = sizeof(palette) / sizeof(palette[0]);
 
-    // Alloca le espressioni iniziali se serve
+    // allocates the expressions if needed
     if (*expressions == NULL)
     {
         *expressions = calloc(MAX_FUNCTIONS, sizeof(char *));
@@ -197,7 +197,7 @@ void inputScene(Scene *nextScene, char ***expressions, int *count)
         Color color = palette[i % paletteSize];
         bool isSelected = (i == selected);
 
-        // Evidenzia la riga selezionata
+        // highlights selected line
         if (isSelected)
         {
             DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(LIGHTGRAY, 0.4f));
@@ -206,19 +206,16 @@ void inputScene(Scene *nextScene, char ***expressions, int *count)
         char label[16];
         snprintf(label, sizeof(label), "Y%d =", i + 1);
 
-        // Selezionata → testo più grande o più acceso
         DrawText(label, 20, 10 + 30 * i, 20, color);
         DrawText((*expressions)[i], 80, 10 + 30 * i, 20, color);
     }
 
-    // Frecce per navigare
     if (IsKeyPressed(KEY_DOWN))
         selected = (selected + 1) % *count;
 
     if (IsKeyPressed(KEY_UP))
         selected = (selected - 1 + *count) % *count;
 
-    // Enter → modifica
     if (IsKeyPressed(KEY_ENTER))
     {
         strcpy(buffer, (*expressions)[selected]);
@@ -230,7 +227,6 @@ void inputScene(Scene *nextScene, char ***expressions, int *count)
         (*expressions)[selected][0] = '\0';
     }
 
-    // Spazio → vai alla scena grafica
     if (IsKeyPressed(KEY_SPACE))
     {
         int nonEmptyCount = 0;
@@ -242,7 +238,6 @@ void inputScene(Scene *nextScene, char ***expressions, int *count)
             *nextScene = GRAPHICS;
     }
 
-    // Esc → torna al menu e pulisci
     if (IsKeyPressed(KEY_ESCAPE))
     {
         for (int i = 0; i < *count; i++)
@@ -255,6 +250,7 @@ void inputScene(Scene *nextScene, char ***expressions, int *count)
     }
 }
 
+//vWindow scene, you can set x and y max and min
 void vWindowScene(Scene *nextScene)
 {
     static int selected = 0;
@@ -340,7 +336,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
     static bool isOptionSelected = false;
 
     if(!isOptionSelected) //if options is still not selected
-        menuSample(gSolveOptionsName, scenesNum, &selectedOption);
+        menuSample(gSolveOptionsName, gSolveOptions, &selectedOption);
 
     if(IsKeyPressed(KEY_ENTER))
         isOptionSelected = true;
