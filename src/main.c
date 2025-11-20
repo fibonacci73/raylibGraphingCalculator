@@ -31,6 +31,9 @@
                 case MENU:
                     menu(&currentScene);
                     break;
+                case EXIT:
+                    CloseWindow();
+                    return 0;
                 case INPUT:
                     inputScene(&currentScene, &expressions, &count);
                     break;

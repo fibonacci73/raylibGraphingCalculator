@@ -58,7 +58,8 @@ int isOperator(char c)
 int isFunction(const char *str)
 {
     return (strcmp(str, "sin") == 0 || strcmp(str, "cos") == 0 ||
-            strcmp(str, "tan") == 0 || strcmp(str, "abs") == 0);
+            strcmp(str, "tan") == 0 || strcmp(str, "abs") == 0 ||
+            strcmp(str, "r") == 0);
 }
 
 /*
@@ -159,6 +160,8 @@ void shuntingYard(const char *input, char *output)
                     operatorStack[++top] = 'C';
                 else if (strcmp(func, "tan") == 0)
                     operatorStack[++top] = 'T';
+                else if (strcmp(func, "r") == 0)
+                    operatorStack[++top] = 'r';
             }
             else // It's a variable (x)
             {
@@ -189,9 +192,10 @@ void shuntingYard(const char *input, char *output)
             if (top >= 0 && operatorStack[top] == '(')
                 top--;
             
-            // Check if there's a function marker (A, S, C, T)
+            // Check if there's a function marker (A, S, C, T, r)
             if (top >= 0 && (operatorStack[top] == 'A' || operatorStack[top] == 'S' || 
-                            operatorStack[top] == 'C' || operatorStack[top] == 'T'))
+                            operatorStack[top] == 'C' || operatorStack[top] == 'T' ||
+                            operatorStack[top] == 'r'))
             {
                 output[outPos++] = operatorStack[top--];
                 output[outPos++] = ' ';  // <-- IMPORTANT: Add space after function marker
