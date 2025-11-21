@@ -27,10 +27,14 @@ extern float xMin, xMax, yMin, yMax, step;
 
 int readExpression(char *expression);
 
-double evaluateRPN(const char *rpn, double xValue);
-void shuntingYard(const char *input, char *output);
+void addExplicitMultiplication(char *string);
+bool isOperator(char c);
+bool isFunction(const char *str);
 int precedence(char op);
-int isOperator(char c);
+
+double evaluateRPN(const char *rpn, double xValue);
+void shuntingYard(char *input, char *output);
 
 int findIntSects(char* func1, char* func2, Vector2* intersections);
+
 #endif
