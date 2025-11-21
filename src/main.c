@@ -7,14 +7,8 @@
 #include "gui.h"
 #include "logic.h"
 
-<<<<<<< HEAD
-    #define maxLines 8
-    #define maxLineLenght 300
-=======
 #define maxLines 8
 #define maxLineLenght 300
-#define step 0.01f
->>>>>>> master
 
 int main(int argc, char const *argv[])
 {
