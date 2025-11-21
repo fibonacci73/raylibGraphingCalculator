@@ -104,7 +104,7 @@ void drawAxes()
     float stepX = 1;
     float stepY = 1;
 
-    // --- Draw background grid (light gray, unobtrusive) ---
+    // Draw background grid (light gray, unobtrusive)
     // Vertical lines
     for (float x = 0; x <= xMax; x += stepX)
     {
@@ -142,7 +142,10 @@ void drawAxes()
     DrawText("Y", x0 + 5, 5, 10, GRAY);
 }
 
-// the scene to read the keyboard input of the functions
+/*  
+    the scene to read the keyboard input of the functions
+    expressions in a pointer to pointer to char, so that it can modify the original array of strings using malloc
+*/
 void inputScene(Scene *nextScene, char ***expressions, int *count)
 {
     static int selected = 0;                    // selected line index
@@ -191,7 +194,6 @@ void inputScene(Scene *nextScene, char ***expressions, int *count)
     // ──────────────────────────────
     // navigation
     // ──────────────────────────────
-
     for (int i = 0; i < *count; i++)
     {
         Color color = palette[i % paletteSize];
@@ -240,9 +242,6 @@ void inputScene(Scene *nextScene, char ***expressions, int *count)
 
     if (IsKeyPressed(KEY_ESCAPE))
     {
-        for (int i = 0; i < *count; i++)
-            free((*expressions)[i]);
-        free(*expressions);
         *expressions = NULL;
         *count = 0;
 
