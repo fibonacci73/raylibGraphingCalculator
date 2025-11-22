@@ -9,7 +9,6 @@
 
 #define maxLines 8
 #define maxLineLenght 300
-#define step 0.01f
 
 int main(int argc, char const *argv[])
 {

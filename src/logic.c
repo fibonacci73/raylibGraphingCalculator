@@ -540,18 +540,44 @@ int findIntSects(char *func1, char *func2, Vector2 *intersections)
 
 int findFunctionRoots(char* func, Vector2 roots[])
 {
-    float funcY;
+    float funcY, prevY;
     int count = 0;
+    int inZeroZone = 0;
+
+    prevY = evaluateRPN(func, xMin);
+    
+    // Check if function starts at zero
+    if(fabs(prevY) <= step)
+    {
+        roots[count++] = (Vector2){xMin, 0};
+        inZeroZone = 1;
+    }
 
     for(float funcX = xMin + step; funcX <= xMax && count < MAX_INTERSECTIONS; funcX += step)
     {
         funcY = evaluateRPN(func, funcX);
 
-        if(funcY <= step/2 && funcY >= -step/2)
+        // Sign change detected (and not already in zero zone)
+        if(prevY * funcY < 0 && !inZeroZone)
         {
-            roots[count] = (Vector2){funcX, funcY};
-            count++;
+            // Linear interpolation for better accuracy
+            float prevX = funcX - step;
+            float x_intercept = prevX - prevY * (step / (funcY - prevY));
+            roots[count++] = (Vector2){x_intercept, 0};
         }
+        // Entering zero zone
+        else if(fabs(funcY) <= step && !inZeroZone)
+        {
+            roots[count++] = (Vector2){funcX, 0};
+            inZeroZone = 1;
+        }
+        // Leaving zero zone
+        else if(fabs(funcY) > step)
+        {
+            inZeroZone = 0;
+        }
+
+        prevY = funcY;
     }
 
     return count;
