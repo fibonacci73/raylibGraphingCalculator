@@ -280,7 +280,7 @@ void vWindowScene(Scene *nextScene)
     }
     else
     {
-        // Lettura caratteri premuti
+        //reads entered chars
         int key = GetCharPressed();
         while (key > 0)
         {
@@ -290,16 +290,14 @@ void vWindowScene(Scene *nextScene)
                 buffer[len] = (char)key;
                 buffer[len + 1] = '\0';
             }
-            key = GetCharPressed(); // legge tutti i caratteri premuti nello stesso frame
+            key = GetCharPressed();
         }
 
-        // Backspace
         if (IsKeyPressed(KEY_BACKSPACE) && strlen(buffer) > 0)
         {
             buffer[strlen(buffer) - 1] = '\0';
         }
 
-        // Conferma
         if (IsKeyPressed(KEY_ENTER))
         {
             *vars[selected] = atof(buffer);
@@ -309,7 +307,7 @@ void vWindowScene(Scene *nextScene)
     }
 
     // DRAW
-    DrawText("Modifica finestra grafico", 10, 10, 24, BLACK);
+    DrawText("edit graphic window", 10, 10, 24, BLACK);
 
     for (int i = 0; i < 4; i++)
     {
