@@ -6,19 +6,20 @@ int readExpression(char *expression)
 {
     int nextChar = GetCharPressed();
     if (nextChar == 0)
-        return 0; // nessun input
+        return 0; //no input
 
     size_t len = strlen(expression);
     if (len >= EXPRESSION_BUFFER - 1)
-        return 0; // buffer pieno
+        return 0;
 
-    // caratteri ammessi
+    //only allows valid characters
     if ((nextChar >= '0' && nextChar <= '9') ||
         (nextChar >= 'a' && nextChar <= 'z') ||
         nextChar == '+' || nextChar == '-' ||
         nextChar == '*' || nextChar == '/' ||
-        nextChar == '^' || nextChar == '|' || 
-        nextChar == '(' || nextChar == ')')
+        nextChar == '^' || nextChar == '|' ||
+        nextChar == '(' || nextChar == ')' ||
+        nextChar == 'A')
     {
         expression[len] = (char)nextChar;
         expression[len + 1] = '\0';
@@ -36,6 +37,7 @@ int readExpression(char *expression)
     return 0;
 }
 
+// returns precedence of operators (sin, cos, tan, roots are not considered here since they need parenthesis)
 int precedence(char op)
 {
     if (op == '+' || op == '-')
@@ -47,31 +49,115 @@ int precedence(char op)
     return 0;
 }
 
+// Inserts explicit multiplication operator (*) where needed
+void addExplicitMultiplication(char *s)
+{
+    int n = strlen(s);
+    int extra = 0;
 
-//Checks if a character is a valid operator
-int isOperator(char c)
+    // Calculate new length with extra '*' characters
+    for (int i = 0; i < n - 1; i++)
+    {
+        char c = s[i];
+        char next = s[i + 1];
+
+        // not between function letters
+        if (isalpha((unsigned char)c) && isalpha((unsigned char)next))
+            continue;
+
+        // not between function name and '('
+        for (int len = 1; len <= 10; len++)
+        {
+            if (i - len + 1 < 0)
+                break;
+            char temp[11] = {0};
+            strncpy(temp, s + i - len + 1, len);
+            if (isFunction(temp) && next == '(')
+            {
+                goto skip_add; //avoids adding *
+            }
+        }
+
+        //general cases
+        if ((isdigit((unsigned char)c) && isalpha((unsigned char)next)) ||
+            ((isdigit((unsigned char)c) || isalpha((unsigned char)c)) && next == '(') ||
+            (c == ')' && (isdigit((unsigned char)next) || isalpha((unsigned char)next) || next == '(')))
+        {
+            extra++;
+        }
+    skip_add:;
+    }
+
+    int newLen = n + extra;
+    s[newLen] = '\0';
+
+    //write from the end to avoid overwriting
+    for (int i = n - 1, j = newLen - 1; i >= 0; i--)
+    {
+        s[j--] = s[i];
+
+        if (i == 0)
+            break;
+
+        char c = s[i - 1];
+        char next = s[i];
+        bool need = false;
+
+        //not between function letters
+        if (isalpha((unsigned char)c) && isalpha((unsigned char)next))
+            continue;
+
+        //not between function name and '('
+        for (int len = 1; len <= 10; len++)
+        {
+            if (i - 1 - len + 1 < 0)
+                break;
+            char temp[11] = {0};
+            strncpy(temp, s + i - 1 - len + 1, len);
+            if (isFunction(temp) && next == '(')
+            {
+                goto skip_star; //avoid *
+            }
+        }
+
+        if ((isdigit((unsigned char)c) && isalpha((unsigned char)next)) ||
+            ((isdigit((unsigned char)c) || isalpha((unsigned char)c)) && next == '(') ||
+            (c == ')' && (isdigit((unsigned char)next) || isalpha((unsigned char)next) || next == '(')))
+        {
+            need = true;
+        }
+
+        if (need)
+            s[j--] = '*';
+    skip_star:;
+    }
+}
+
+// Checks if a character is a valid operator
+bool isOperator(char c)
 {
     return (c == '+' || c == '-' || c == '*' || c == '/' || c == '^');
 }
 
-//Checks if string is a function name
-int isFunction(const char *str)
+// Checks if string is a function name
+bool isFunction(const char *str)
 {
     return (strcmp(str, "sin") == 0 || strcmp(str, "cos") == 0 ||
-            strcmp(str, "tan") == 0 || strcmp(str, "abs") == 0);
+            strcmp(str, "tan") == 0 || strcmp(str, "A") == 0 ||
+            strcmp(str, "r") == 0);
 }
 
 /*
     Shunting Yard algorithm - converts infix notation to RPN
-    Supports: ^, sin, cos, tan, abs (valore assoluto ||)
+    Supports: ^, sin, cos, tan, abs (||)
     Input: Mathematical expression in infix notation (e.g., "sin(x)+3^2")
     Output: Expression in Reverse Polish Notation (e.g., "x sin 3 2 ^ +")
 */
-void shuntingYard(const char *input, char *output)
+void shuntingYard(char *input, char *output)
 {
     char operatorStack[EXPRESSION_BUFFER];
-    int top = -1;
-    int outPos = 0;
+    int stackTop = -1;
+    int outputPos = 0;
 
     output[0] = '\0';
 
@@ -79,14 +165,15 @@ void shuntingYard(const char *input, char *output)
     int prePos = 0;
     int absOpen = 0; // 0 = chiuso, 1 = aperto
 
+
     for (int i = 0; input[i] != '\0'; i++)
     {
         if (input[i] == '|')
         {
             if (absOpen == 0) // Opening |
             {
-                strcpy(preprocessed + prePos, "abs(");
-                prePos += 4;
+                strcpy(preprocessed + prePos, "A(");
+                prePos += 2;
                 absOpen = 1;
             }
             else // Closing |
@@ -100,9 +187,11 @@ void shuntingYard(const char *input, char *output)
             preprocessed[prePos++] = input[i];
         }
     }
+
+    addExplicitMultiplication(input);
     preprocessed[prePos] = '\0';
 
-    // Usa la stringa preprocessata
+    //use preprocessed string
     input = preprocessed;
     int len = strlen(input);
     for (int i = 0; i < len; i++)
@@ -126,10 +215,10 @@ void shuntingYard(const char *input, char *output)
                 i++;
             int numLen = i - start;
             // Copy the number to output
-            strncpy(output + outPos, input + start, numLen);
-            outPos += numLen;
-            output[outPos++] = ' ';
-            output[outPos] = '\0';
+            strncpy(output + outputPos, input + start, numLen);
+            outputPos += numLen;
+            output[outputPos++] = ' ';
+            output[outputPos] = '\0';
             i--; // Adjust for loop increment
         }
 
@@ -150,52 +239,56 @@ void shuntingYard(const char *input, char *output)
             // Check if it's a function
             if (isFunction(func))
             {
-                // Push a marker (like 'A' for abs, 'S' for sin, etc.)
-                if (strcmp(func, "abs") == 0)
-                    operatorStack[++top] = 'A';
-                else if (strcmp(func, "sin") == 0)
-                    operatorStack[++top] = 'S';
+                // Push a marker (like 'T' for tan, 'S' for sin, etc.)
+                if (strcmp(func, "sin") == 0)
+                    operatorStack[++stackTop] = 'S';
                 else if (strcmp(func, "cos") == 0)
-                    operatorStack[++top] = 'C';
+                    operatorStack[++stackTop] = 'C';
                 else if (strcmp(func, "tan") == 0)
-                    operatorStack[++top] = 'T';
+                    operatorStack[++stackTop] = 'T';
+                else if (strcmp(func, "r") == 0)
+                    operatorStack[++stackTop] = 'r';
+                else if (strcmp(func, "A") == 0)
+                    operatorStack[++stackTop] = 'A';
             }
+
             else // It's a variable (x)
             {
-                strcpy(output + outPos, func);
-                outPos += strlen(func);
-                output[outPos++] = ' ';
-                output[outPos] = '\0';
+                strcpy(output + outputPos, func);
+                outputPos += strlen(func);
+                output[outputPos++] = ' ';
+                output[outputPos] = '\0';
             }
         }
 
         // Handle opening parenthesis
         else if (token == '(')
         {
-            operatorStack[++top] = token;
+            operatorStack[++stackTop] = token;
         }
 
         // Handle closing parenthesis
         else if (token == ')')
         {
             // Pop operators until we find the matching opening parenthesis
-            while (top >= 0 && operatorStack[top] != '(')
+            while (stackTop >= 0 && operatorStack[stackTop] != '(')
             {
-                output[outPos++] = operatorStack[top--];
-                output[outPos++] = ' ';  // <-- ADD SPACE after each operator
-                output[outPos] = '\0';
+                output[outputPos++] = operatorStack[stackTop--];
+                output[outputPos++] = ' '; // <-- ADD SPACE after each operator
+                output[outputPos] = '\0';
             }
             // Remove the opening parenthesis from stack
-            if (top >= 0 && operatorStack[top] == '(')
-                top--;
-            
-            // Check if there's a function marker (A, S, C, T)
-            if (top >= 0 && (operatorStack[top] == 'A' || operatorStack[top] == 'S' || 
-                            operatorStack[top] == 'C' || operatorStack[top] == 'T'))
+            if (stackTop >= 0 && operatorStack[stackTop] == '(')
+                stackTop--;
+
+            // Check if there's a function marker (A, S, C, T, r)
+            if (stackTop >= 0 && (operatorStack[stackTop] == 'A' || operatorStack[stackTop] == 'S' ||
+                                  operatorStack[stackTop] == 'C' || operatorStack[stackTop] == 'T' ||
+                                  operatorStack[stackTop] == 'r'))
             {
-                output[outPos++] = operatorStack[top--];
-                output[outPos++] = ' ';  // <-- IMPORTANT: Add space after function marker
-                output[outPos] = '\0';
+                output[outputPos++] = operatorStack[stackTop--];
+                output[outputPos++] = ' '; // <-- IMPORTANT: Add space after function marker
+                output[outputPos] = '\0';
             }
         }
 
@@ -205,41 +298,41 @@ void shuntingYard(const char *input, char *output)
             // ^ is right-associative, others are left-associative
             if (token == '^')
             {
-                while (top >= 0 && isOperator(operatorStack[top]) &&
-                       precedence(operatorStack[top]) > precedence(token))
+                while (stackTop >= 0 && isOperator(operatorStack[stackTop]) &&
+                       precedence(operatorStack[stackTop]) > precedence(token))
                 {
-                    output[outPos++] = operatorStack[top--];
-                    output[outPos++] = ' ';
-                    output[outPos] = '\0';
+                    output[outputPos++] = operatorStack[stackTop--];
+                    output[outputPos++] = ' ';
+                    output[outputPos] = '\0';
                 }
             }
             else
             {
-                while (top >= 0 && isOperator(operatorStack[top]) &&
-                       precedence(operatorStack[top]) >= precedence(token))
+                while (stackTop >= 0 && isOperator(operatorStack[stackTop]) &&
+                       precedence(operatorStack[stackTop]) >= precedence(token))
                 {
-                    output[outPos++] = operatorStack[top--];
-                    output[outPos++] = ' ';
-                    output[outPos] = '\0';
+                    output[outputPos++] = operatorStack[stackTop--];
+                    output[outputPos++] = ' ';
+                    output[outputPos] = '\0';
                 }
             }
             // Push current operator onto stack
-            operatorStack[++top] = token;
+            operatorStack[++stackTop] = token;
         }
     }
 
     // Pop remaining operators from stack
-    while (top >= 0)
+    while (stackTop >= 0)
     {
-        if (operatorStack[top] != '(' && operatorStack[top] != ')')
+        if (operatorStack[stackTop] != '(' && operatorStack[stackTop] != ')')
         {
-            output[outPos++] = operatorStack[top--];
-            output[outPos++] = ' ';
-            output[outPos] = '\0';
+            output[outputPos++] = operatorStack[stackTop--];
+            output[outputPos++] = ' ';
+            output[outputPos] = '\0';
         }
         else
         {
-            top--;
+            stackTop--;
         }
     }
 }
@@ -252,9 +345,9 @@ void shuntingYard(const char *input, char *output)
 double evaluateRPN(const char *rpn, double xValue)
 {
     double stack[MAX_TOKENS];
-    int top = -1; // Stack pointer
+    int stackTop = -1; // Stack pointer
     char token[50];
-    int pos = 0;
+    int outputPos = 0;
 
     // Parse the RPN expression token by token
     for (int i = 0;; i++)
@@ -264,126 +357,126 @@ double evaluateRPN(const char *rpn, double xValue)
         // Token delimiter (space or end of string)
         if (isspace((unsigned char)c) || c == '\0')
         {
-            if (pos > 0)
+            if (outputPos > 0)
             {
-                token[pos] = '\0';
-                pos = 0;
+                token[outputPos] = '\0';
+                outputPos = 0;
 
                 // Handle numbers (including negative numbers)
                 if (isdigit((unsigned char)token[0]) ||
                     (token[0] == '-' && isdigit((unsigned char)token[1])))
                 {
-                    stack[++top] = atof(token);
+                    stack[++stackTop] = atof(token);
                 }
 
                 // Handle variable 'x'
                 else if (strcmp(token, "x") == 0)
                 {
-                    stack[++top] = xValue;
+                    stack[++stackTop] = xValue;
                 }
 
-                // Handle sin function
+                // Handle abs function
                 else if (token[0] == 'A' && token[1] == '\0')
                 {
-                    if (top >= 0)
+                    if (stackTop >= 0)
                     {
-                        double a = stack[top--];
-                        stack[++top] = fabs(a);
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = fabs(a);
                     }
                 }
 
                 // Similarly for the other function markers:
                 else if (token[0] == 'S' && token[1] == '\0')
                 {
-                    if (top >= 0)
+                    if (stackTop >= 0)
                     {
-                        double a = stack[top--];
-                        stack[++top] = sin(a);
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = sin(a);
                     }
                 }
-                
+
                 else if (token[0] == 'r' && token[1] == '\0')
                 {
-                    if (top >= 0)
+                    if (stackTop >= 0)
                     {
-                        double a = stack[top--];
-                        stack[++top] = sqrt(a);
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = sqrt(a);
                     }
                 }
 
                 else if (token[0] == 'C' && token[1] == '\0')
                 {
-                    if (top >= 0)
+                    if (stackTop >= 0)
                     {
-                        double a = stack[top--];
-                        stack[++top] = cos(a);
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = cos(a);
                     }
                 }
 
                 else if (token[0] == 'T' && token[1] == '\0')
                 {
-                    if (top >= 0)
+                    if (stackTop >= 0)
                     {
-                        double a = stack[top--];
-                        stack[++top] = tan(a);
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = tan(a);
                     }
                 }
 
                 // Handle addition operator
                 else if (strcmp(token, "+") == 0)
                 {
-                    if (top >= 1)
+                    if (stackTop >= 1)
                     {
-                        double b = stack[top--];
-                        double a = stack[top--];
-                        stack[++top] = a + b;
+                        double b = stack[stackTop--];
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = a + b;
                     }
                 }
 
                 // Handle subtraction operator
                 else if (strcmp(token, "-") == 0)
                 {
-                    if (top >= 1)
+                    if (stackTop >= 1)
                     {
-                        double b = stack[top--];
-                        double a = stack[top--];
-                        stack[++top] = a - b;
+                        double b = stack[stackTop--];
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = a - b;
                     }
                 }
 
                 // Handle multiplication operator
                 else if (strcmp(token, "*") == 0)
                 {
-                    if (top >= 1)
+                    if (stackTop >= 1)
                     {
-                        double b = stack[top--];
-                        double a = stack[top--];
-                        stack[++top] = a * b;
+                        double b = stack[stackTop--];
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = a * b;
                     }
                 }
 
                 // Handle division operator
                 else if (strcmp(token, "/") == 0)
                 {
-                    if (top >= 1)
+                    if (stackTop >= 1)
                     {
-                        double b = stack[top--];
-                        double a = stack[top--];
+                        double b = stack[stackTop--];
+                        double a = stack[stackTop--];
                         if (b != 0)
-                            stack[++top] = a / b;
+                            stack[++stackTop] = a / b;
                         else
-                            stack[++top] = 0; // Division by zero protection
+                            stack[++stackTop] = 0; // Division by zero protection
                     }
                 }
 
                 // Handle power operator ^
                 else if (strcmp(token, "^") == 0)
                 {
-                    if (top >= 1)
+                    if (stackTop >= 1)
                     {
-                        double b = stack[top--];
-                        double a = stack[top--];
-                        stack[++top] = pow(a, b);
+                        double b = stack[stackTop--];
+                        double a = stack[stackTop--];
+                        stack[++stackTop] = pow(a, b);
                     }
                 }
             }
@@ -394,45 +487,48 @@ double evaluateRPN(const char *rpn, double xValue)
         else
         {
             // Build the current token character by character
-            token[pos++] = c;
+            token[outputPos++] = c;
         }
     }
 
     // Return the final result (top of the stack)
-    return (top >= 0) ? stack[top] : 0;
+    return (stackTop >= 0) ? stack[stackTop] : 0;
 }
 
-
-int findIntSects(char* func1, char* func2, Vector2* intersections)
+/* Finds intersection points between two functions defined by their RPN expressions
+   intersections is an array of Vector2 to store intersection points
+   Returns the number of intersection points found
+*/
+int findIntSects(char *func1, char *func2, Vector2 *intersections)
 {
     float prevDiff, currDiff;
     float func1Y, func2Y;
     int count = 0;
-    
+
     // Get initial difference
     float x = xMin;
     func1Y = evaluateRPN(func1, x);
     func2Y = evaluateRPN(func2, x);
     prevDiff = func1Y - func2Y;
-    
+
     // Scan for sign changes
-    for(x = xMin + step; x <= xMax && count < MAX_INTERSECTIONS; x += step)
+    for (x = xMin + step; x <= xMax && count < MAX_INTERSECTIONS; x += step)
     {
         func1Y = evaluateRPN(func1, x);
         func2Y = evaluateRPN(func2, x);
         currDiff = func1Y - func2Y;
-        
+
         // Sign change detected - functions crossed
-        if(prevDiff * currDiff < 0)
+        if (prevDiff * currDiff < 0)
         {
             // Linear interpolation to find intersection point
             float xPrev = x - step;
             float t = fabsf(prevDiff) / (fabsf(prevDiff) + fabsf(currDiff));
             float xIntersect = xPrev + t * step;
-            
+
             // Calculate Y at intersection point
             float yIntersect = evaluateRPN(func1, xIntersect);
-            
+
             intersections[count] = (Vector2){xIntersect, yIntersect};
             count++;
 
