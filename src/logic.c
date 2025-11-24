@@ -18,7 +18,8 @@ int readExpression(char *expression)
         nextChar == '+' || nextChar == '-' ||
         nextChar == '*' || nextChar == '/' ||
         nextChar == '^' || nextChar == '|' ||
-        nextChar == '(' || nextChar == ')')
+        nextChar == '(' || nextChar == ')' ||
+        nextChar == 'A')
     {
         expression[len] = (char)nextChar;
         expression[len + 1] = '\0';
@@ -142,7 +143,7 @@ bool isOperator(char c)
 bool isFunction(const char *str)
 {
     return (strcmp(str, "sin") == 0 || strcmp(str, "cos") == 0 ||
-            strcmp(str, "tan") == 0 || strcmp(str, "abs") == 0 ||
+            strcmp(str, "tan") == 0 || strcmp(str, "A") == 0 ||
             strcmp(str, "r") == 0);
 }
 
@@ -164,7 +165,6 @@ void shuntingYard(char *input, char *output)
     int prePos = 0;
     int absOpen = 0; // 0 = chiuso, 1 = aperto
 
-    addExplicitMultiplication(input);
 
     for (int i = 0; input[i] != '\0'; i++)
     {
@@ -173,7 +173,7 @@ void shuntingYard(char *input, char *output)
             if (absOpen == 0) // Opening |
             {
                 strcpy(preprocessed + prePos, "A(");
-                prePos += 4;
+                prePos += 2;
                 absOpen = 1;
             }
             else // Closing |
@@ -187,9 +187,11 @@ void shuntingYard(char *input, char *output)
             preprocessed[prePos++] = input[i];
         }
     }
+
+    addExplicitMultiplication(input);
     preprocessed[prePos] = '\0';
 
-    // Usa la stringa preprocessata
+    //use preprocessed string
     input = preprocessed;
     int len = strlen(input);
     for (int i = 0; i < len; i++)
@@ -246,6 +248,8 @@ void shuntingYard(char *input, char *output)
                     operatorStack[++stackTop] = 'T';
                 else if (strcmp(func, "r") == 0)
                     operatorStack[++stackTop] = 'r';
+                else if (strcmp(func, "A") == 0)
+                    operatorStack[++stackTop] = 'A';
             }
 
             else // It's a variable (x)
@@ -371,7 +375,7 @@ double evaluateRPN(const char *rpn, double xValue)
                     stack[++stackTop] = xValue;
                 }
 
-                // Handle sin function
+                // Handle abs function
                 else if (token[0] == 'A' && token[1] == '\0')
                 {
                     if (stackTop >= 0)
