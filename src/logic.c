@@ -6,13 +6,13 @@ int readExpression(char *expression)
 {
     int nextChar = GetCharPressed();
     if (nextChar == 0)
-        return 0; //no input
+        return 0; // no input
 
     size_t len = strlen(expression);
     if (len >= EXPRESSION_BUFFER - 1)
         return 0;
 
-    //only allows valid characters
+    // only allows valid characters
     if ((nextChar >= '0' && nextChar <= '9') ||
         (nextChar >= 'a' && nextChar <= 'z') ||
         nextChar == '+' || nextChar == '-' ||
@@ -74,11 +74,11 @@ void addExplicitMultiplication(char *s)
             strncpy(temp, s + i - len + 1, len);
             if (isFunction(temp) && next == '(')
             {
-                goto skip_add; //avoids adding *
+                goto skip_add; // avoids adding *
             }
         }
 
-        //general cases
+        // general cases
         if ((isdigit((unsigned char)c) && isalpha((unsigned char)next)) ||
             ((isdigit((unsigned char)c) || isalpha((unsigned char)c)) && next == '(') ||
             (c == ')' && (isdigit((unsigned char)next) || isalpha((unsigned char)next) || next == '(')))
@@ -91,7 +91,7 @@ void addExplicitMultiplication(char *s)
     int newLen = n + extra;
     s[newLen] = '\0';
 
-    //write from the end to avoid overwriting
+    // write from the end to avoid overwriting
     for (int i = n - 1, j = newLen - 1; i >= 0; i--)
     {
         s[j--] = s[i];
@@ -103,11 +103,11 @@ void addExplicitMultiplication(char *s)
         char next = s[i];
         bool need = false;
 
-        //not between function letters
+        // not between function letters
         if (isalpha((unsigned char)c) && isalpha((unsigned char)next))
             continue;
 
-        //not between function name and '('
+        // not between function name and '('
         for (int len = 1; len <= 10; len++)
         {
             if (i - 1 - len + 1 < 0)
@@ -116,7 +116,7 @@ void addExplicitMultiplication(char *s)
             strncpy(temp, s + i - 1 - len + 1, len);
             if (isFunction(temp) && next == '(')
             {
-                goto skip_star; //avoid *
+                goto skip_star; // avoid *
             }
         }
 
@@ -165,7 +165,6 @@ void shuntingYard(char *input, char *output)
     int prePos = 0;
     int absOpen = 0; // 0 = chiuso, 1 = aperto
 
-
     for (int i = 0; input[i] != '\0'; i++)
     {
         if (input[i] == '|')
@@ -191,7 +190,7 @@ void shuntingYard(char *input, char *output)
     addExplicitMultiplication(input);
     preprocessed[prePos] = '\0';
 
-    //use preprocessed string
+    // use preprocessed string
     input = preprocessed;
     int len = strlen(input);
     for (int i = 0; i < len; i++)
@@ -538,46 +537,55 @@ int findIntSects(char *func1, char *func2, Vector2 *intersections)
     return count;
 }
 
-int findFunctionRoots(char* func, Vector2 roots[])
+int findFunctionRoots(char *func, Vector2 roots[])
 {
     float funcY, prevY;
     int count = 0;
-    int inZeroZone = 0;
+    bool inZeroZone = false;
+    bool prevWasNaN = false;
 
     prevY = evaluateRPN(func, xMin);
-    
+    prevWasNaN = isnan(prevY);
+
     // Check if function starts at zero
-    if(fabs(prevY) <= step)
+    if (!prevWasNaN && fabs(prevY) <= step * 10)
     {
         roots[count++] = (Vector2){xMin, 0};
-        inZeroZone = 1;
+        inZeroZone = true;
     }
 
-    for(float funcX = xMin + step; funcX <= xMax && count < MAX_INTERSECTIONS; funcX += step)
+    for (float funcX = xMin + step; funcX <= xMax && count < MAX_INTERSECTIONS; funcX += step)
     {
         funcY = evaluateRPN(func, funcX);
+        bool currIsNaN = isnan(funcY);
 
-        // Sign change detected (and not already in zero zone)
-        if(prevY * funcY < 0 && !inZeroZone)
+        // Transitioning from NaN to valid (function boundary - likely a root)
+        if (prevWasNaN && !currIsNaN && fabs(funcY) < 0.1)
         {
-            // Linear interpolation for better accuracy
+            roots[count++] = (Vector2){funcX, 0};
+            inZeroZone = true;
+        }
+        // Sign change detected
+        else if (!prevWasNaN && !currIsNaN && prevY * funcY < 0 && !inZeroZone)
+        {
             float prevX = funcX - step;
             float x_intercept = prevX - prevY * (step / (funcY - prevY));
             roots[count++] = (Vector2){x_intercept, 0};
         }
-        // Entering zero zone
-        else if(fabs(funcY) <= step && !inZeroZone)
+        // Very close to zero
+        else if (!currIsNaN && fabs(funcY) < step * 5 && !inZeroZone)
         {
             roots[count++] = (Vector2){funcX, 0};
-            inZeroZone = 1;
+            inZeroZone = true;
         }
         // Leaving zero zone
-        else if(fabs(funcY) > step)
+        else if (!currIsNaN && fabs(funcY) > step * 10 && inZeroZone)
         {
-            inZeroZone = 0;
+            inZeroZone = false;
         }
 
         prevY = funcY;
+        prevWasNaN = currIsNaN;
     }
 
     return count;
