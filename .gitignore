@@ -1,0 +1,7 @@
+# ignore build artifacts
+obj/
+*.o
+
+# ignore IDE settings
+.vscode/
+*main.code-workspace
