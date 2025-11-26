@@ -1,7 +1,0 @@
-# ignore build artifacts
-obj/
-*.o
-
-# ignore IDE settings
-.vscode/
-*.code-workspace
