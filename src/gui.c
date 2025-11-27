@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 const char *scenesName[menuScenesNum] = {"1. Graphic", "2. Exit"};
-const char *gSolveOptionsName[gSolveOptions] = {"1. Intesect", "2. Roots"};
+const char *gSolveOptionsName[gSolveOptions] = {"1. IntSect", "2. Roots"};
 
 //implements the general menuSample() function for the main menu
 void menu(Scene *nextScene)
