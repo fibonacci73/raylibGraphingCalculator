@@ -5,12 +5,12 @@
 #include <stdio.h>
 
 const char *scenesName[menuScenesNum] = {"1. Graphic", "2. Exit"};
-const char *gSolveOptionsName[gSolveOptions] = {"1. IntSect", "2. Roots"};
+const char *gSolveOptionsName[gSolveOptions] = {"1. Intersect", "2. Roots", "3. Y-Intercepts"};
 
-//implements the general menuSample() function for the main menu
+// implements the general menuSample() function for the main menu
 void menu(Scene *nextScene)
 {
-    static int selectedOption = 0;  // persistent across frames
+    static int selectedOption = 0; // persistent across frames
 
     menuSample(scenesName, menuScenesNum, &selectedOption);
 
@@ -142,7 +142,7 @@ void drawAxes()
     DrawText("Y", x0 + 5, 5, 10, GRAY);
 }
 
-/*  
+/*
     the scene to read the keyboard input of the functions
     expressions in a pointer to pointer to char, so that it can modify the original array of strings using malloc
 */
@@ -249,7 +249,7 @@ void inputScene(Scene *nextScene, char ***expressions, int *count)
     }
 }
 
-//vWindow scene, you can set x and y max and min
+// vWindow scene, you can set x and y max and min
 void vWindowScene(Scene *nextScene)
 {
     static int selected = 0;
@@ -280,7 +280,7 @@ void vWindowScene(Scene *nextScene)
     }
     else
     {
-        //reads entered chars
+        // reads entered chars
         int key = GetCharPressed();
         while (key > 0)
         {
@@ -329,35 +329,34 @@ void vWindowScene(Scene *nextScene)
 
 void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 {
-    static int selectedOption = 0;  // persistent across frames
+    static int selectedOption = 0; // persistent across frames
     static bool isOptionSelected = false;
 
-    if(!isOptionSelected) //if options is still not selected
+    if (!isOptionSelected) // if options is still not selected
         menuSample(gSolveOptionsName, gSolveOptions, &selectedOption);
 
-    if(IsKeyPressed(KEY_ENTER))
+    if (IsKeyPressed(KEY_ENTER))
         isOptionSelected = true;
-    
-    if(IsKeyPressed(KEY_ESCAPE) && !isOptionSelected) //differentiated from the esc in switch: case 0
+
+    if (IsKeyPressed(KEY_ESCAPE) && !isOptionSelected) // differentiated from the esc in switch: case 0
     {
         *nextScene = GRAPHICS;
         return;
     }
 
-
-    if(isOptionSelected)
+    if (isOptionSelected)
     {
-        static bool justEntered = true;
+        static bool justEntered0 = true;
 
         Color palette[] = {RED, GREEN, BLUE, ORANGE, PURPLE};
         const int paletteSize = sizeof(palette) / sizeof(palette[0]);
 
-        static int hovered = 0; 
+        static int hovered = 0;
 
         switch (selectedOption)
         {
-        case 0: //IntSect code
-            
+        case 0: // IntSect code
+
             static int intSectFuncs[2] = {-1, -1};
             static int intSectStage = 0;
 
@@ -366,50 +365,50 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
 
             static bool calcJustEntered = true;
 
-
-            //Ignores first frame input
-            if(justEntered) 
+            // Ignores first frame input
+            if (justEntered0)
             {
-                //resets the static variables if is the first frame
+                // resets the static variables if is the first frame
                 hovered = 0;
                 intSectFuncs[0] = -1;
                 intSectFuncs[1] = -1;
                 intSectStage = 0;
 
-                justEntered = false;
-                break; //exits right away
+                justEntered0 = false;
+                break; // exits right away
             }
 
-            if(IsKeyPressed(KEY_DOWN))
+            if (IsKeyPressed(KEY_DOWN))
             {
                 hovered++;
             }
 
-            if(IsKeyPressed(KEY_UP))
+            if (IsKeyPressed(KEY_UP))
             {
                 hovered--;
             }
 
-            //comes back to gSolve menu
-            if(IsKeyPressed(KEY_ESCAPE))
+            // comes back to gSolve menu
+            if (IsKeyPressed(KEY_ESCAPE))
             {
                 isOptionSelected = false;
-                justEntered = true;
+                justEntered0 = true;
                 calcJustEntered = true;
                 break;
             }
 
-            if(IsKeyPressed(KEY_ENTER) && intSectStage < 2)
+            if (IsKeyPressed(KEY_ENTER) && intSectStage < 2)
             {
-                //doesn't allow to pick a empty function, doesn't allow to pick the same expression twice
-                if(intSectFuncs[0] == hovered || (*expressions)[hovered][0] == '\0') break;
+                // doesn't allow to pick a empty function, doesn't allow to pick the same expression twice
+                if (intSectFuncs[0] == hovered || (*expressions)[hovered][0] == '\0')
+                    break;
                 intSectFuncs[intSectStage] = hovered;
                 intSectStage++;
             }
 
-            if(intSectStage == 2)
-            {   
-                if(calcJustEntered)
+            if (intSectStage == 2)
+            {
+                if (calcJustEntered)
                 {
                     char func1RPN[MAX_TOKENS];
                     char func2RPN[MAX_TOKENS];
@@ -419,16 +418,16 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                     intsectsNum = findIntSects(func1RPN, func2RPN, intersections);
                     calcJustEntered = false;
                 }
-                
-                for(int i = 0; i < intsectsNum; i++)
+
+                for (int i = 0; i < intsectsNum; i++)
                 {
                     char label[64];
-                    snprintf(label, sizeof(label), "int %d = (%.2f, %.2f)", 
-                            i + 1, intersections[i].x, intersections[i].y);
-                    
+                    snprintf(label, sizeof(label), "int %d = (%.2f, %.2f)",
+                             i + 1, intersections[i].x, intersections[i].y);
+
                     DrawText(label, 20, 10 + 30 * i, 20, BLACK);
                 }
-                
+
                 break;
             }
 
@@ -436,13 +435,13 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             {
                 Color color = palette[i % paletteSize];
 
-                //Highlights the hovered
+                // Highlights the hovered
                 if (hovered == i)
                 {
                     DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(LIGHTGRAY, 0.4f));
                 }
 
-                if(intSectFuncs[0] == i || intSectFuncs[1] == i)
+                if (intSectFuncs[0] == i || intSectFuncs[1] == i)
                 {
                     DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(SKYBLUE, 0.4f));
                 }
@@ -450,56 +449,55 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 char label[16];
                 snprintf(label, sizeof(label), "Y%d =", i + 1);
 
-                //highlights
+                // highlights
                 DrawText(label, 20, 10 + 30 * i, 20, color);
                 DrawText((*expressions)[i], 80, 10 + 30 * i, 20, color);
             }
 
-
             break;
 
         case 1:
-            static bool justEntered = true, computeRoots = true, funcRootSelected = false;
+            static bool justEntered1 = true, computeRoots = true, funcRootSelected = false;
             static int rootCount;
             static Vector2 roots[MAX_INTERSECTIONS];
 
-            //Ignores first frame input
-            if(justEntered) 
+            // Ignores first frame input
+            if (justEntered1)
             {
-                //resets the static variables if is the first frame
+                // resets the static variables if is the first frame
                 hovered = 0;
                 rootCount = -1;
                 intSectStage = 0;
 
-                justEntered = false;
-                break; //exits right away
+                justEntered1 = false;
+                break; // exits right away
             }
 
-            if(IsKeyPressed(KEY_ESCAPE))
+            if (IsKeyPressed(KEY_ESCAPE))
             {
                 isOptionSelected = false;
-                justEntered = true;
+                justEntered1 = true;
                 computeRoots = true;
                 funcRootSelected = false;
                 break;
             }
 
-            if(IsKeyPressed(KEY_ENTER) || funcRootSelected)
+            if (IsKeyPressed(KEY_ENTER) || funcRootSelected)
             {
-                if(computeRoots)
+                if (computeRoots)
                 {
                     char funcRootRPN[MAX_TOKENS];
                     shuntingYard((*expressions)[hovered], funcRootRPN);
 
-                    rootCount = findFunctionRoots(funcRootRPN, roots);
+                    rootCount = findAxisIntersections(funcRootRPN, roots, true);
                 }
 
-                for(int i = 0; i < rootCount; i++)
+                for (int i = 0; i < rootCount; i++)
                 {
                     char label[64];
-                    snprintf(label, sizeof(label), "roots: (%.2f, %.2f)", 
-                            roots[i].x, roots[i].y);
-                    
+                    snprintf(label, sizeof(label), "roots: (%.2f, %.2f)",
+                             roots[i].x, roots[i].y);
+
                     DrawText(label, 20, 10 + 30 * i, 20, BLACK);
                 }
 
@@ -507,12 +505,12 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 break;
             }
 
-            if(IsKeyPressed(KEY_DOWN))
+            if (IsKeyPressed(KEY_DOWN))
             {
                 hovered++;
             }
 
-            if(IsKeyPressed(KEY_UP))
+            if (IsKeyPressed(KEY_UP))
             {
                 hovered--;
             }
@@ -521,7 +519,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
             {
                 Color color = palette[i % paletteSize];
 
-                //Highlights the hovered
+                // Highlights the hovered
                 if (hovered == i)
                 {
                     DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(LIGHTGRAY, 0.4f));
@@ -530,16 +528,93 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
                 char label[16];
                 snprintf(label, sizeof(label), "Y%d =", i + 1);
 
-                //highlights
+                // highlights
                 DrawText(label, 20, 10 + 30 * i, 20, color);
                 DrawText((*expressions)[i], 80, 10 + 30 * i, 20, color);
             }
             break;
 
         case 2:
-            
+            static bool justEntered2 = true, computeYSepts = true, funcYSeptSelected = false;
+            static int YSeptCount;
+            static Vector2 Ycepts[MAX_INTERSECTIONS];
+
+            // Ignores first frame input
+            if (justEntered2)
+            {
+                // resets the static variables if is the first frame
+                hovered = 0;
+                YSeptCount = -1;
+                intSectStage = 0;
+
+                justEntered2 = false;
+                break; // exits right away
+            }
+
+            if (IsKeyPressed(KEY_ESCAPE))
+            {
+                isOptionSelected = false;
+                justEntered2 = true;
+                computeYSepts = true;
+                funcYSeptSelected = false;
+                break;
+            }
+
+            if (IsKeyPressed(KEY_ENTER) || funcYSeptSelected)
+            {
+                if (computeYSepts)
+                {
+                    char funcYSeptRPN[MAX_TOKENS];
+                    shuntingYard((*expressions)[hovered], funcYSeptRPN);
+
+                    YSeptCount = findAxisIntersections(funcYSeptRPN, Ycepts, false);
+                }
+
+                if (YSeptCount == 1)
+                {
+                    char label[64];
+                    snprintf(label, sizeof(label), "Y-intercept: (%.2f, %.2f)",
+                             Ycepts[0].x, Ycepts[0].y);
+
+                    DrawText(label, 20, 10, 20, BLACK);
+                }
+                else
+                {
+                    DrawText("No Y-intercept.", 20, 10, 20, BLACK);
+                }
+
+                funcYSeptSelected = true;
+                break;
+            }
+
+            if (IsKeyPressed(KEY_DOWN))
+            {
+                hovered++;
+            }
+
+            if (IsKeyPressed(KEY_UP))
+            {
+                hovered--;
+            }
+
+            for (int i = 0; i < *count; i++)
+            {
+                Color color = palette[i % paletteSize];
+
+                // Highlights the hovered
+                if (hovered == i)
+                {
+                    DrawRectangle(10, 5 + 30 * i, 700, 28, Fade(LIGHTGRAY, 0.4f));
+                }
+
+                char label[16];
+                snprintf(label, sizeof(label), "Y%d =", i + 1);
+
+                // highlights
+                DrawText(label, 20, 10 + 30 * i, 20, color);
+                DrawText((*expressions)[i], 80, 10 + 30 * i, 20, color);
+            }
             break;
-            
 
         default:
             break;
@@ -547,7 +622,7 @@ void gSolveScene(Scene *nextScene, int *count, char ***expressions)
     }
 }
 
-void menuSample(const char** optionsName, int optionsNum, int *selected)
+void menuSample(const char **optionsName, int optionsNum, int *selected)
 {
     Vector2 startingPos = {20, 20};
 

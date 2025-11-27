@@ -10,7 +10,7 @@
 #define PARAM_COUNT 4
 #define BUFFER_SIZE 32
 
-#define gSolveOptions 2
+#define gSolveOptions 3
 #define menuScenesNum 2
 
 //enum representing the possible scenes in the applications

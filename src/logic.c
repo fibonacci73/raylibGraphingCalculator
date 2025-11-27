@@ -537,56 +537,78 @@ int findIntSects(char *func1, char *func2, Vector2 *intersections)
     return count;
 }
 
-int findFunctionRoots(char *func, Vector2 roots[])
+int findAxisIntersections(char *func, Vector2 roots[], bool isXAxis)
 {
-    float funcY, prevY;
+    float funcValue, prevValue;
     int count = 0;
     bool inZeroZone = false;
     bool prevWasNaN = false;
 
-    prevY = evaluateRPN(func, xMin);
-    prevWasNaN = isnan(prevY);
-
-    // Check if function starts at zero
-    if (!prevWasNaN && fabs(prevY) <= step * 10)
+    if (isXAxis)
     {
-        roots[count++] = (Vector2){xMin, 0};
-        inZeroZone = true;
-    }
+        prevValue = evaluateRPN(func, xMin);
+        prevWasNaN = isnan(prevValue);
 
-    for (float funcX = xMin + step; funcX <= xMax && count < MAX_INTERSECTIONS; funcX += step)
-    {
-        funcY = evaluateRPN(func, funcX);
-        bool currIsNaN = isnan(funcY);
-
-        // Transitioning from NaN to valid (function boundary - likely a root)
-        if (prevWasNaN && !currIsNaN && fabs(funcY) < 0.1)
+        // Check if function starts at zero
+        if (!prevWasNaN && fabs(prevValue) <= step * 10)
         {
-            roots[count++] = (Vector2){funcX, 0};
+            roots[count++] = (Vector2){xMin, 0};
             inZeroZone = true;
         }
-        // Sign change detected
-        else if (!prevWasNaN && !currIsNaN && prevY * funcY < 0 && !inZeroZone)
+
+        for (float funcX = xMin + step; funcX <= xMax && count < MAX_INTERSECTIONS; funcX += step)
         {
-            float prevX = funcX - step;
-            float x_intercept = prevX - prevY * (step / (funcY - prevY));
-            roots[count++] = (Vector2){x_intercept, 0};
-        }
-        // Very close to zero
-        else if (!currIsNaN && fabs(funcY) < step * 5 && !inZeroZone)
-        {
-            roots[count++] = (Vector2){funcX, 0};
-            inZeroZone = true;
-        }
-        // Leaving zero zone
-        else if (!currIsNaN && fabs(funcY) > step * 10 && inZeroZone)
-        {
-            inZeroZone = false;
+            funcValue = evaluateRPN(func, funcX);
+            bool currIsNaN = isnan(funcValue);
+
+            // Transitioning from NaN to valid (function boundary - likely a root)
+            if (prevWasNaN && !currIsNaN && fabs(funcValue) < 0.1)
+            {
+                roots[count++] = (Vector2){funcX, 0};
+                inZeroZone = true;
+            }
+            // Sign change detected
+            else if (!prevWasNaN && !currIsNaN && prevValue * funcValue < 0 && !inZeroZone)
+            {
+                float prevX = funcX - step;
+                float x_intercept = prevX - prevValue * (step / (funcValue - prevValue));
+                roots[count++] = (Vector2){x_intercept, 0};
+            }
+            // Very close to zero
+            else if (!currIsNaN && fabs(funcValue) < step * 5 && !inZeroZone)
+            {
+                roots[count++] = (Vector2){funcX, 0};
+                inZeroZone = true;
+            }
+            // Leaving zero zone
+            else if (!currIsNaN && fabs(funcValue) > step * 10 && inZeroZone)
+            {
+                inZeroZone = false;
+            }
+
+            prevValue = funcValue;
+            prevWasNaN = currIsNaN;
         }
 
-        prevY = funcY;
-        prevWasNaN = currIsNaN;
+        return count;
     }
 
-    return count;
+    else // Y-Intercepts
+    {
+        float yInterceptX = 0.0f;
+
+        // Only compute Y-intercept if X=0 is inside the graph range
+        if (yInterceptX >= xMin && yInterceptX <= xMax)
+        {
+            funcValue = evaluateRPN(func, yInterceptX); // f(0)
+
+            if (!isnan(funcValue))
+            {
+                // The Y-intercept point is (0, f(0))
+                roots[count++] = (Vector2){yInterceptX, funcValue};
+            }
+        }
+
+        return count;
+    }
 }
